@@ -64,7 +64,6 @@ const MapView = () => {
     const getJobsMarkers = useCallback(() => {
         if(!jobs || jobs?.length <= 1) return
 
-        console.log('getJobsMarkers')
         const newMarkers = jobs
           .filter(job => job._id !== "1")
           .filter(job => job?.location?.coordinates?.length !== 0)
@@ -111,6 +110,8 @@ const MapView = () => {
 
         // set job popup & showPopUp
         const { company, status, location } = job
+        console.log('----------------------------------')
+        console.log('company, status, location', company, status, location)
         setPopUp({
             ...popUp,
             popUpInfo: {
@@ -122,6 +123,7 @@ const MapView = () => {
             },
         })
         setShowPopUp(true)
+
         // setJobPopupInContext(job)
         // setShowPopUpInContext(true)
 
@@ -167,6 +169,9 @@ const MapView = () => {
             'text-bg-info': jobStatus === 'pending',
         })
     }
+
+    console.log('popUp', popUp)
+    console.log('showPopUp', showPopUp)
 
     return (
             <Map
