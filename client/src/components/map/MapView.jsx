@@ -16,6 +16,16 @@ const ZOOMS = {
     CLOSE_VIEW: 12
 }
 
+const initialPopUpState = {
+    popUpInfo: {
+        jobId: null,
+        company: '',
+        status: '',
+        longitude: 0,
+        latitude: 0
+    }
+}
+
 const MapView = () => {
     const navigate = useNavigate()
     const location = useLocation()
@@ -24,19 +34,20 @@ const MapView = () => {
     // * context
     const { user } = useUserContext()
     const { jobs, editJobId, setIsEditModeInContext, setEditJobIdInContext } = useJobsContext()
-    const {
-        showPopUp,
-        popUpInfo,
-        popUpCoordinates,
-        setJobPopupInContext, // set popUpInfo + popUpCoordinates
-        setShowPopUpInContext // set showPopUp
-    } = useMapContext()
+    // const {
+    //     showPopUp,
+    //     popUpInfo,
+    //     popUpCoordinates,
+    //     setJobPopupInContext, // set popUpInfo + popUpCoordinates
+    //     setShowPopUpInContext // set showPopUp
+    // } = useMapContext()
 
     // * local state
     const mapRef = useRef(null)
     const [userMarkerLngLat, setUserMarkerLngLat] = useState({longitude: 14.44, latitude: 35.89 })
     const [jobsMarkersLngLat, setJobsMarkersLngLat] = useState([])
-    const [popUp, setPopUp] = useState(null)
+    const [popUp, setPopUp] = useState(initialPopUpState)
+    const [showPopUp, setShowPopUp] = useState(false)
 
     // * functions
     // set user marker & fly to user location
@@ -92,13 +103,27 @@ const MapView = () => {
     const handleJobMarkerClick = (jobId) => {
         const job = jobs.find(job => job._id === jobId)
 
+        if(!job) return
+
         // set job edit mode + editJobId
         setEditJobIdInContext(jobId)
         setIsEditModeInContext(true)
 
-        // set job popup + showPopUp
-        setJobPopupInContext(job)
-        setShowPopUpInContext(true)
+        // set job popup & showPopUp
+        const { company, status, location } = job
+        setPopUp({
+            ...popUp,
+            popUpInfo: {
+                jobId,
+                company,
+                status,
+                longitude: location.coordinates[0],
+                latitude: location.coordinates[1]
+            },
+        })
+        setShowPopUp(true)
+        // setJobPopupInContext(job)
+        // setShowPopUpInContext(true)
 
         // const [longitude, latitude] = job?.location?.coordinates
         // if(!longitude || !latitude) return
@@ -112,14 +137,18 @@ const MapView = () => {
         setIsEditModeInContext(true)
 
         // Close popup
-        setShowPopUpInContext(false)
+        setPopUp(initialPopUpState)
+        setShowPopUp(false)
+        // setShowPopUpInContext(false)
 
         // navigate to edit job
         navigate('/dashboard/add-job')
     }
 
     const handlePopUpClose = () => {
-        setShowPopUpInContext(false)
+        setPopUp(initialPopUpState)
+        setShowPopUp(false)
+        // setShowPopUpInContext(false)
     }
 
     // * marker classes
@@ -153,20 +182,20 @@ const MapView = () => {
             >
                 <>
                     {/*job popUp*/}
-                    {showPopUp && popUpCoordinates && popUpInfo &&
+                    {showPopUp && popUp?.popUpInfo?.longitude && popUp?.popUpInfo?.latitude &&
                         <Popup
                             anchor='bottom'
-                            longitude={Number(popUpCoordinates.longitude)}
-                            latitude={Number(popUpCoordinates.latitude)}
+                            longitude={Number(popUp.popUpInfo.longitude)}
+                            latitude={Number(popUp.popUpInfo.latitude)}
                             offset={[0, -30]}
                             onClose={handlePopUpClose}
                             className='rounded-circle'
                         >
                             <div className="mt-3">
-                                <span className={jobStatusPopupClass(popUpInfo.status)}>{popUpInfo.status}</span>
-                                <span className='d-block'>{popUpInfo.company}</span>
+                                <span className={jobStatusPopupClass(popUp.popUpInfo.status)}>{popUp.popUpInfo.status}</span>
+                                <span className='d-block'>{popUp.popUpInfo.company}</span>
                                 <button
-                                    onClick={() => handlePopUpEditButtonClick(popUpInfo.jobId)}
+                                    onClick={() => handlePopUpEditButtonClick(popUp.popUpInfo.jobId)}
                                     className='popup--edit-btn'
                                 >
                                     Edit
