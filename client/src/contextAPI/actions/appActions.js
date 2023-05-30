@@ -1,0 +1,5 @@
+export const SET_FLASH = 'SET_FLASH'
+export const CLEAR_FLASH = 'CLEAR_FLASH'
+export const SET_IS_LOADING = 'SET_IS_LOADING'
+export const CLEAR_IS_LOADING = 'CLEAR_IS_LOADING'
+export const TOGGLE_SIDE_BAR = 'TOGGLE_SIDE_BAR'
