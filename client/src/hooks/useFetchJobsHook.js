@@ -5,62 +5,23 @@ import fetchOptions from '../utils/fetchOptions'
 const SERVER_URL = 'http://localhost:3001/api/v1'
 
 const useFetchJobsHook = () => {
-
-    const {
-        setFlash,
-        setIsLoading,
-        clearIsLoading
-    } = useAppContext()
-
-    const {
-        user,
-        token,
-        clearUser,
-        setUserInStorage,
-        setUserInContext
-    } = useUserContext()
-
-    const {
-        setStatsInContext,
-        setAllJobsInContext,
-        addJobInContext,
-        updateJobInContext,
-        deleteJobInContext,
-    } = useJobsContext()
-
-    const {
-        setJobPopupInContext,
-        setShowPopUpInContext,
-    } = useMapContext()
+    const {setFlash, setIsLoading, clearIsLoading} = useAppContext()
+    const {user, token, clearUser, setUserInStorage, setUserInContext} = useUserContext()
+    const {setStatsInContext, setAllJobsInContext, addJobInContext, updateJobInContext, deleteJobInContext,} = useJobsContext()
+    const {setJobPopupInContext, setShowPopUpInContext,} = useMapContext()
 
     // fetch
-    const fetchData = async({
-                                endpoint,
-                                method='POST',
-                                body={},
-                                authorization='',
-                                redirect,
-                                flashContent
-                            }) => {
+    const fetchData = async({ endpoint, method='POST', body={}, authorization='', redirect, flashContent }) => {
         try {
             const url = `${SERVER_URL}/${endpoint}`
 
-            const response = await fetch(url,
-                fetchOptions({ method, body, authorization }))
+            const response = await fetch(url, fetchOptions({
+                method, body, authorization }))
 
             const data = await response.json()
 
             if(response.status === StatusCodes.OK || response.status === StatusCodes.CREATED){
-
-                const {
-                    stats,
-                    monthlyApplications,
-                    jobs,
-                    job,
-                    totalJobs,
-                    numOfPages,
-                    token: newToken
-                } = data
+                const { stats, monthlyApplications, jobs, job, totalJobs, numOfPages, token: newToken } = data
 
                 if(flashContent) {
                     setFlash({ message: flashContent })
@@ -92,17 +53,16 @@ const useFetchJobsHook = () => {
                 }, 1500)
 
             } else if (response.status === StatusCodes.FORBIDDEN) {
-                clearUser()
                 setFlash({ type: 'danger', message: 'Your session expired, please log in' })
+                clearUser()
 
             } else if(data && data.error) {
-                clearUser()
                 setFlash({ type: 'danger', message: data.error.message })
+                clearUser()
             }
         } catch (error) {
-            clearUser()
             setFlash({ type: 'danger', message: error.message })
-            console.log(error)
+            clearUser()
         }
     }
 
