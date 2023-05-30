@@ -36,7 +36,7 @@ const MapView = () => {
     const mapRef = useRef(null)
     const [userMarkerLngLat, setUserMarkerLngLat] = useState({longitude: 14.44, latitude: 35.89 })
     const [jobsMarkersLngLat, setJobsMarkersLngLat] = useState([])
-    // const [popUp, setPopUp] = useState(null)
+    const [popUp, setPopUp] = useState(null)
 
     // * functions
     // set user marker & fly to user location
@@ -53,9 +53,10 @@ const MapView = () => {
     const getJobsMarkers = useCallback(() => {
         if(!jobs || jobs?.length <= 1) return
 
+        console.log('getJobsMarkers')
         const newMarkers = jobs
           .filter(job => job._id !== "1")
-          .filter(job => job?.location?.coordinates?.length === 0)
+          .filter(job => job?.location?.coordinates?.length !== 0)
           .map(job => {
               const [longitude, latitude] = job.location.coordinates
               return { jobId: job._id, longitude, latitude }
@@ -82,7 +83,6 @@ const MapView = () => {
 
     // fly to user location on dashboard & profile pages
     useEffect(() => {
-        // fly to user location on profile page
         if(path === '/dashboard' || path === '/dashboard/profile') {
             handlePopUpClose()
             mapRef.current?.flyTo({ center: user.location.coordinates, zoom: ZOOMS.LARGE_VIEW })
@@ -99,7 +99,11 @@ const MapView = () => {
         // set job popup + showPopUp
         setJobPopupInContext(job)
         setShowPopUpInContext(true)
-        // mapRef.current?.flyTo({ center: [ job.location.coordinates[0], job.location.coordinates[1]] })
+
+        // const [longitude, latitude] = job?.location?.coordinates
+        // if(!longitude || !latitude) return
+
+        // mapRef.current?.flyTo({ center: [longitude, latitude], zoom: ZOOMS.CLOSE_VIEW })
     }
 
     const handlePopUpEditButtonClick = (jobId) => {
