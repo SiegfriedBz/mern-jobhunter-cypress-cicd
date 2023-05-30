@@ -1,11 +1,4 @@
-import { useEffect } from 'react'
-import { useNavigate } from "react-router-dom"
-import {
-    useAppContext,
-    useUserContext,
-    useJobsContext,
-    useMapContext
-} from '../contextAPI/context'
+import { useAppContext, useUserContext, useJobsContext, useMapContext } from '../contextAPI/context'
 import { StatusCodes } from 'http-status-codes'
 import fetchOptions from '../utils/fetchOptions'
 
@@ -22,7 +15,7 @@ const useFetchJobsHook = () => {
     const {
         user,
         token,
-        // clearUser
+        clearUser,
         setUserInStorage,
         setUserInContext
     } = useUserContext()
@@ -39,8 +32,6 @@ const useFetchJobsHook = () => {
         setJobPopupInContext,
         setShowPopUpInContext,
     } = useMapContext()
-
-    // const navigate = useNavigate()
 
     // fetch
     const fetchData = async({
@@ -101,15 +92,15 @@ const useFetchJobsHook = () => {
                 }, 1500)
 
             } else if (response.status === StatusCodes.FORBIDDEN) {
-                // clearUser()
+                clearUser()
                 setFlash({ type: 'danger', message: 'Your session expired, please log in' })
 
             } else if(data && data.error) {
-                // clearUser()
+                clearUser()
                 setFlash({ type: 'danger', message: data.error.message })
             }
         } catch (error) {
-            // clearUser()
+            clearUser()
             setFlash({ type: 'danger', message: error.message })
             console.log(error)
         }
