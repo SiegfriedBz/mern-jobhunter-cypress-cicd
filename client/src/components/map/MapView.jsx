@@ -39,7 +39,6 @@ const MapView = () => {
 
   // * functions
   const flyTo = (lngLat, zoom = ZOOMS.LARGE_VIEW) => {
-    console.log("flyTo", lngLat, zoom);
     mapRef.current?.flyTo({ center: lngLat, zoom });
   };
 
