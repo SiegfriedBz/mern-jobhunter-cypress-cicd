@@ -1,236 +1,243 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import {
-    useUserContext,
-    useJobsContext,
-    useMapContext
-} from "../../contextAPI/context"
-import Map, { Marker, Popup } from 'react-map-gl'
-import clsx from 'clsx'
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useUserContext, useJobsContext } from "../../contextAPI/context";
+import Map, { Marker, Popup } from "react-map-gl";
+import clsx from "clsx";
 
-const MAPBOX_TOKEN = process.env.REACT_APP_MAPBOX_TOKEN
-const mapStyle = 'mapbox://styles/mapbox/streets-v9'
+const MAPBOX_TOKEN = process.env.REACT_APP_MAPBOX_TOKEN;
+const mapStyle = "mapbox://styles/mapbox/streets-v9";
 
 const ZOOMS = {
-    LARGE_VIEW: 9,
-    CLOSE_VIEW: 12
-}
-
-const initialPopUpState = {
-    popUpInfo: {
-        jobId: null,
-        company: '',
-        status: '',
-        longitude: 0,
-        latitude: 0
-    }
-}
+  LARGE_VIEW: 9,
+  CLOSE_VIEW: 12,
+};
 
 const MapView = () => {
-    const navigate = useNavigate()
-    const location = useLocation()
-    const path = location.pathname
+  const navigate = useNavigate();
+  const location = useLocation();
+  const path = location.pathname;
 
-    // * context
-    const { user } = useUserContext()
-    const { jobs, editJobId, setIsEditModeInContext, setEditJobIdInContext } = useJobsContext()
-    // const {
-    //     showPopUp,
-    //     popUpInfo,
-    //     popUpCoordinates,
-    //     setJobPopupInContext, // set popUpInfo + popUpCoordinates
-    //     setShowPopUpInContext // set showPopUp
-    // } = useMapContext()
+  // * context
+  const { user } = useUserContext();
+  const {
+    jobs,
+    editJobId,
+    popUpJobId,
+    setIsEditModeInContext,
+    setEditJobIdInContext,
+    setPopUpJobIdInContext,
+  } = useJobsContext();
 
-    // * local state
-    const mapRef = useRef(null)
-    const [userMarkerLngLat, setUserMarkerLngLat] = useState({longitude: 14.44, latitude: 35.89 })
-    const [jobsMarkersLngLat, setJobsMarkersLngLat] = useState([])
-    const [popUp, setPopUp] = useState(initialPopUpState)
-    const [showPopUp, setShowPopUp] = useState(false)
+  // * local state
+  const mapRef = useRef(null);
+  const [userMarkerLngLat, setUserMarkerLngLat] = useState({
+    longitude: 14.44,
+    latitude: 35.89,
+  });
+  const [jobsMarkersLngLat, setJobsMarkersLngLat] = useState([]);
+  const [jobPopUp, setJobPopUp] = useState(null);
 
-    // * functions
-    // set user marker & fly to user location
-    useEffect(() => {
-        if (!user || user?.location?.coordinates?.length === 0) return
+  // * functions
+  const flyTo = (lngLat, zoom = ZOOMS.LARGE_VIEW) => {
+    console.log("flyTo", lngLat, zoom);
+    mapRef.current?.flyTo({ center: lngLat, zoom });
+  };
 
-        const [longitude, latitude] = user.location.coordinates
-        setUserMarkerLngLat({ longitude, latitude })
+  // set user marker & fly to user location
+  useEffect(() => {
+    if (!user || user?.location?.coordinates?.length === 0) return;
 
-        mapRef.current?.flyTo({ center: [longitude, latitude], zoom: ZOOMS.LARGE_VIEW })
-    }, [user, mapRef.current])
+    const [longitude, latitude] = user.location.coordinates;
 
-    // set jobs markers
-    const getJobsMarkers = useCallback(() => {
-        if(!jobs || jobs?.length <= 1) return
+    setUserMarkerLngLat({ longitude, latitude });
 
-        const newMarkers = jobs
-          .filter(job => job._id !== "1")
-          .filter(job => job?.location?.coordinates?.length !== 0)
-          .map(job => {
-              const [longitude, latitude] = job.location.coordinates
-              return { jobId: job._id, longitude, latitude }
-          })
+    flyTo([longitude, latitude]);
+  }, [user]);
 
-        setJobsMarkersLngLat(newMarkers)
-    }, [jobs])
+  // set jobs markers
+  const getJobsMarkers = useCallback(() => {
+    if (!jobs || jobs?.length <= 1) return;
 
-    useEffect(() => {
-        getJobsMarkers()
-    }, [getJobsMarkers])
+    const newMarkers = jobs
+      .filter((job) => job._id !== "1")
+      .filter((job) => job?.location?.coordinates?.length !== 0)
+      .map((job) => {
+        const [longitude, latitude] = job.location.coordinates;
+        return { jobId: job._id, longitude, latitude };
+      });
 
-    // fly to job location on edit job page
-    useEffect(() => {
-        if(!editJobId) return
+    setJobsMarkersLngLat(newMarkers);
+  }, [jobs]);
 
-        const job = jobs.find(job => job._id === editJobId)
-        if (!job || job?.location?.coordinates?.length === 0) return
+  useEffect(() => {
+    getJobsMarkers();
+  }, [getJobsMarkers]);
 
-        const [longitude, latitude] = job.location.coordinates
+  // set jobPopUp & fly to job location
+  useEffect(() => {
+    if (!popUpJobId) return;
 
-        mapRef.current?.flyTo({ center: [longitude, latitude], zoom: ZOOMS.CLOSE_VIEW })
-    }, [editJobId])
+    const job = jobs.find((job) => job._id === popUpJobId);
+    if (!job || job?.location?.coordinates?.length === 0) return;
 
-    // fly to user location on dashboard & profile pages
-    useEffect(() => {
-        if(path === '/dashboard' || path === '/dashboard/profile') {
-            handlePopUpClose()
-            mapRef.current?.flyTo({ center: user.location.coordinates, zoom: ZOOMS.LARGE_VIEW })
-        }
-    }, [path])
+    const {
+      company,
+      status,
+      location: {
+        coordinates: [longitude, latitude],
+      },
+    } = job;
 
-    const handleJobMarkerClick = (jobId) => {
-        const job = jobs.find(job => job._id === jobId)
+    setJobPopUp({
+      jobId: popUpJobId,
+      company,
+      status,
+      longitude,
+      latitude,
+    });
 
-        if(!job) return
+    // fly to job location
+    flyTo([longitude, latitude], ZOOMS.CLOSE_VIEW);
+  }, [jobs, popUpJobId]);
 
-        // set job edit mode + editJobId
-        setEditJobIdInContext(jobId)
-        setIsEditModeInContext(true)
+  // fly to job location on edit job page & show job popUp
+  useEffect(() => {
+    if (!editJobId) return;
 
-        // set job popup & showPopUp
-        const { company, status, location } = job
-        console.log('----------------------------------')
-        console.log('company, status, location', company, status, location)
-        setPopUp({
-            ...popUp,
-            popUpInfo: {
-                jobId,
-                company,
-                status,
-                longitude: location.coordinates[0],
-                latitude: location.coordinates[1]
-            },
-        })
-        setShowPopUp(true)
+    const job = jobs.find((job) => job._id === editJobId);
+    if (!job || job?.location?.coordinates?.length === 0) return;
 
-        // setJobPopupInContext(job)
-        // setShowPopUpInContext(true)
+    const [longitude, latitude] = job.location.coordinates;
 
-        // const [longitude, latitude] = job?.location?.coordinates
-        // if(!longitude || !latitude) return
+    flyTo([longitude, latitude], ZOOMS.CLOSE_VIEW);
 
-        // mapRef.current?.flyTo({ center: [longitude, latitude], zoom: ZOOMS.CLOSE_VIEW })
+    setPopUpJobIdInContext(editJobId);
+  }, [jobs, editJobId]);
+
+  // fly to user location on dashboard & profile pages
+  // TODO  & show user popUp
+  useEffect(() => {
+    if (path === "/dashboard" || path === "/dashboard/profile") {
+      setPopUpJobIdInContext(null);
+
+      const { longitude, latitude } = userMarkerLngLat;
+
+      flyTo([longitude, latitude]);
     }
+  }, [path, userMarkerLngLat]);
 
-    const handlePopUpEditButtonClick = (jobId) => {
-        // set job edit mode + editJobId
-        setEditJobIdInContext(jobId)
-        setIsEditModeInContext(true)
+  // fly to job location & show jobPopUp
+  const handleJobMarkerClick = (jobId) => {
+    const job = jobs.find((job) => job._id === jobId);
 
-        // Close popup
-        setPopUp(initialPopUpState)
-        setShowPopUp(false)
-        // setShowPopUpInContext(false)
+    if (!job) return;
 
-        // navigate to edit job
-        navigate('/dashboard/add-job')
-    }
+    // fly to job location
+    const [longitude, latitude] = job.location.coordinates;
+    flyTo([longitude, latitude], ZOOMS.CLOSE_VIEW);
 
-    const handlePopUpClose = () => {
-        setPopUp(initialPopUpState)
-        setShowPopUp(false)
-        // setShowPopUpInContext(false)
-    }
+    // set & show jobPopUp
+    setPopUpJobIdInContext(jobId);
+  };
 
-    // * marker classes
-    const jobMarkerClass = (jobId) => {
-        return clsx('marker gray-marker', {
-            'blue-marker': jobId === editJobId
-        })
-    }
+  const handlePopUpEditButtonClick = (jobId) => {
+    // set editJobId & isEditMode
+    setEditJobIdInContext(jobId);
+    setIsEditModeInContext(true);
 
-    // * popup classes
-    const jobStatusPopupClass = (jobStatus) => {
-        return clsx('badge d-block p-2 mb-2', {
-            'text-bg-success': jobStatus === 'offer received',
-            'text-bg-primary': jobStatus === 'interview',
-            'text-bg-secondary': jobStatus === 'declined',
-            'text-bg-info': jobStatus === 'pending',
-        })
-    }
+    // navigate to edit job
+    navigate("/dashboard/add-job");
+  };
 
-    console.log('popUp', popUp)
-    console.log('showPopUp', showPopUp)
+  // * marker classes
+  const jobMarkerClass = (jobId) => {
+    return clsx("marker gray-marker", {
+      "blue-marker": jobId === editJobId,
+    });
+  };
 
-    return (
-            <Map
-                ref={mapRef}
-                initialViewState={{
-                    ...userMarkerLngLat,
-                    zoom: ZOOMS.LARGE_VIEW
-                }}
-                style={{height: 400}}
-                mapStyle={mapStyle}
-                mapboxAccessToken={MAPBOX_TOKEN}
-                onMove={() => { getJobsMarkers() }}
-            >
-                <>
-                    {/*job popUp*/}
-                    {showPopUp && popUp?.popUpInfo?.longitude && popUp?.popUpInfo?.latitude &&
-                        <Popup
-                            anchor='bottom'
-                            longitude={Number(popUp.popUpInfo.longitude)}
-                            latitude={Number(popUp.popUpInfo.latitude)}
-                            offset={[0, -30]}
-                            onClose={handlePopUpClose}
-                            className='rounded-circle'
-                        >
-                            <div className="mt-3">
-                                <span className={jobStatusPopupClass(popUp.popUpInfo.status)}>{popUp.popUpInfo.status}</span>
-                                <span className='d-block'>{popUp.popUpInfo.company}</span>
-                                <button
-                                    onClick={() => handlePopUpEditButtonClick(popUp.popUpInfo.jobId)}
-                                    className='popup--edit-btn'
-                                >
-                                    Edit
-                                </button>
-                            </div>
-                        </Popup>
-                    }
+  // * popup classes
+  const jobStatusPopupClass = (jobStatus) => {
+    return clsx("badge d-block p-2 mb-2", {
+      "text-bg-success": jobStatus === "offer received",
+      "text-bg-primary": jobStatus === "interview",
+      "text-bg-secondary": jobStatus === "declined",
+      "text-bg-info": jobStatus === "pending",
+    });
+  };
 
-                    {/*userMarker*/}
-                    {user && userMarkerLngLat &&
-                        <Marker longitude={userMarkerLngLat.longitude} latitude={userMarkerLngLat.latitude} anchor="bottom">
-                            <div className="marker green-marker"></div>
-                        </Marker>
-                    }
+  return (
+    <Map
+      ref={mapRef}
+      initialViewState={{
+        ...userMarkerLngLat,
+        zoom: ZOOMS.LARGE_VIEW,
+      }}
+      style={{ height: 400 }}
+      mapStyle={mapStyle}
+      mapboxAccessToken={MAPBOX_TOKEN}
+      onMove={() => {
+        getJobsMarkers();
+      }}
+    >
+      <>
+        {/*job popUp*/}
+        {popUpJobId && jobPopUp && jobPopUp.longitude && jobPopUp.latitude && (
+          <Popup
+            anchor="bottom"
+            longitude={Number(jobPopUp.longitude)}
+            latitude={Number(jobPopUp.latitude)}
+            offset={[0, -30]}
+            onClose={() => setPopUpJobIdInContext(null)}
+            className="rounded-circle"
+          >
+            <div className="mt-3">
+              <span className={jobStatusPopupClass(jobPopUp.status)}>
+                {jobPopUp.status}
+              </span>
+              <span className="d-block">{jobPopUp.company}</span>
+              <button
+                onClick={() => handlePopUpEditButtonClick(jobPopUp.jobId)}
+                className="popup--edit-btn"
+              >
+                Edit
+              </button>
+            </div>
+          </Popup>
+        )}
 
-                    {/*jobsMarkers*/}
-                    {jobs && jobsMarkersLngLat?.map(marker => {
-                        const { jobId, longitude, latitude } = marker
-                        return jobId ?
-                            <Marker key={jobId} longitude={longitude} latitude={latitude} anchor="bottom" >
-                                <div
-                                    onClick={() => handleJobMarkerClick(jobId)}
-                                    className={jobMarkerClass(jobId)}
-                                ></div>
-                            </Marker>
-                            : null
-                    })}
-                </>
-            </Map>
-    )
-}
+        {/*userMarker*/}
+        {user && userMarkerLngLat && (
+          <Marker
+            longitude={userMarkerLngLat.longitude}
+            latitude={userMarkerLngLat.latitude}
+            anchor="bottom"
+          >
+            <div className="marker green-marker"></div>
+          </Marker>
+        )}
 
-export default MapView
+        {/*jobsMarkers*/}
+        {jobs &&
+          jobsMarkersLngLat?.map((marker) => {
+            const { jobId, longitude, latitude } = marker;
+            return jobId ? (
+              <Marker
+                key={jobId}
+                longitude={longitude}
+                latitude={latitude}
+                anchor="bottom"
+              >
+                <div
+                  onClick={() => handleJobMarkerClick(jobId)}
+                  className={jobMarkerClass(jobId)}
+                ></div>
+              </Marker>
+            ) : null;
+          })}
+      </>
+    </Map>
+  );
+};
+
+export default MapView;

@@ -1,17 +1,17 @@
-import { useAppContext, AppContextProvider } from './appContext'
-import { useUserContext, UserContextProvider } from './userContext'
-import { initJobState, initAllJobsState, useJobsContext, JobsContextProvider } from './jobsContext'
-import { useMapContext, MapContextProvider } from './mapContext'
+import { useAppContext, AppContextProvider } from "./appContext";
+import { useUserContext, UserContextProvider } from "./userContext";
+import {
+  initAllJobsState,
+  useJobsContext,
+  JobsContextProvider,
+} from "./jobsContext";
 
 export {
-    useAppContext,
-    AppContextProvider,
-    useUserContext,
-    UserContextProvider,
-    initJobState,
-    initAllJobsState,
-    useJobsContext,
-    JobsContextProvider,
-    useMapContext,
-    MapContextProvider,
-}
+  useAppContext,
+  AppContextProvider,
+  useUserContext,
+  UserContextProvider,
+  initAllJobsState,
+  useJobsContext,
+  JobsContextProvider,
+};
