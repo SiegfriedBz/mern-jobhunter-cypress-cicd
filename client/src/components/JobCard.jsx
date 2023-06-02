@@ -1,12 +1,12 @@
-import moment from "moment";
-import { useFetchJobsHook } from "../hooks";
-import { useJobsContext } from "../contextAPI/context";
-import { JobInfo } from "../components";
-import { FaLocationArrow, FaBriefcase, FaCalendarAlt } from "react-icons/fa";
+import moment from 'moment'
+import { FaLocationArrow, FaBriefcase, FaCalendarAlt } from 'react-icons/fa'
+import { useFetchJobsHook } from '../hooks'
+import { useJobsContext } from '../contextAPI/context'
+import JobInfo from './JobInfo'
 
 const JobCard = ({ job }) => {
-  const { setPopUpJobIdInContext } = useJobsContext();
-  const { deleteJob } = useFetchJobsHook();
+  const { setPopUpJobIdInContext } = useJobsContext()
+  const { deleteJob } = useFetchJobsHook()
 
   const {
     _id: jobId,
@@ -17,21 +17,17 @@ const JobCard = ({ job }) => {
     jobType,
     jobCategory,
     createdAt,
-  } = job;
+  } = job
 
   const handleFlyToJob = () => {
-    setPopUpJobIdInContext(jobId);
-  };
+    setPopUpJobIdInContext(jobId)
+  }
 
   const handleDeleteJob = async () => {
-    try {
-      await deleteJob(jobId);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+    await deleteJob(jobId)
+  }
 
-  const date = moment(createdAt).format("MMM Do YY");
+  const date = moment(createdAt).format('MMM Do YY')
 
   return (
     <div className="job">
@@ -70,6 +66,7 @@ const JobCard = ({ job }) => {
         </footer>
       </div>
     </div>
-  );
-};
-export default JobCard;
+  )
+}
+
+export default JobCard

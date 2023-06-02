@@ -1,17 +1,18 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { StatusCodes } from 'http-status-codes'
 import {
   useAppContext,
   useUserContext,
   useJobsContext,
-} from "../contextAPI/context";
-import { StatusCodes } from "http-status-codes";
-import fetchOptions from "../utils/fetchOptions";
+} from '../contextAPI/context'
+import fetchOptions from '../utils/fetchOptions'
 
-const SERVER_URL = "http://localhost:3001/api/v1";
+const SERVER_URL = 'http://localhost:3001/api/v1'
 
 const useFetchJobsHook = () => {
-  const { setFlash, setIsLoading, clearIsLoading } = useAppContext();
+  const { setFlash, setIsLoading, clearIsLoading } = useAppContext()
   const { user, token, clearUser, setUserInStorage, setUserInContext } =
-    useUserContext();
+    useUserContext()
   const {
     setStatsInContext,
     setAllJobsInContext,
@@ -20,19 +21,17 @@ const useFetchJobsHook = () => {
     deleteJobInContext,
     setEditJobIdInContext,
     setPopUpJobIdInContext,
-  } = useJobsContext();
+  } = useJobsContext()
 
-  // fetch
   const fetchData = async ({
     endpoint,
-    method = "POST",
+    method = 'POST',
     body = {},
-    authorization = "",
-    redirect,
+    authorization = '',
     flashContent,
   }) => {
     try {
-      const url = `${SERVER_URL}/${endpoint}`;
+      const url = `${SERVER_URL}/${endpoint}`
 
       const response = await fetch(
         url,
@@ -40,10 +39,10 @@ const useFetchJobsHook = () => {
           method,
           body,
           authorization,
-        })
-      );
+        }),
+      )
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (
         response.status === StatusCodes.OK ||
@@ -57,61 +56,61 @@ const useFetchJobsHook = () => {
           totalJobs,
           numOfPages,
           token: newToken,
-        } = data;
+        } = data
 
         if (flashContent) {
-          setFlash({ message: flashContent });
+          setFlash({ message: flashContent })
         }
 
+        /* eslint no-underscore-dangle: 0 */
         setTimeout(() => {
           // refresh token
-          setUserInStorage(user, newToken);
-          setUserInContext(user, newToken);
+          setUserInStorage(user, newToken)
+          setUserInContext(user, newToken)
 
-          if (method === "GET" && endpoint === "jobs/stats") {
-            setStatsInContext({ stats, monthlyApplications });
+          if (method === 'GET' && endpoint === 'jobs/stats') {
+            setStatsInContext({ stats, monthlyApplications })
           }
-          if (method === "GET" && endpoint === "jobs") {
-            setAllJobsInContext({ jobs, totalJobs, numOfPages });
+          if (method === 'GET' && endpoint === 'jobs') {
+            setAllJobsInContext({ jobs, totalJobs, numOfPages })
           }
-          if (method === "POST") {
-            addJobInContext({ job, totalJobs, numOfPages });
-            setEditJobIdInContext(job._id);
-            setPopUpJobIdInContext(job._id);
+          if (method === 'POST') {
+            addJobInContext({ job, totalJobs, numOfPages })
+            setEditJobIdInContext(job._id)
+            setPopUpJobIdInContext(job._id)
           }
-          if (method === "PATCH") {
-            updateJobInContext({ job, totalJobs, numOfPages });
-            // setJobPopupInContext(job)
-            setEditJobIdInContext(job._id);
+          if (method === 'PATCH') {
+            updateJobInContext({ job, totalJobs, numOfPages })
+            setEditJobIdInContext(job._id)
+            setPopUpJobIdInContext(job._id)
           }
-          if (method === "DELETE") {
-            deleteJobInContext({ job, totalJobs, numOfPages });
-            setPopUpJobIdInContext(null);
-            //setShowPopUpInContext(false)
-            setEditJobIdInContext(null);
+          if (method === 'DELETE') {
+            deleteJobInContext({ job, totalJobs, numOfPages })
+            setEditJobIdInContext(null)
+            setPopUpJobIdInContext(null)
           }
-        }, 1500);
+        }, 1500)
       } else if (response.status === StatusCodes.FORBIDDEN) {
         setFlash({
-          type: "danger",
-          message: "Your session expired, please log in",
-        });
-        clearUser();
+          type: 'danger',
+          message: 'Your session expired, please log in',
+        })
+        clearUser()
       } else if (data && data.error) {
-        setFlash({ type: "danger", message: data.error.message });
-        clearUser();
+        setFlash({ type: 'danger', message: data.error.message })
+        clearUser()
       }
     } catch (error) {
-      setFlash({ type: "danger", message: error.message });
-      clearUser();
+      setFlash({ type: 'danger', message: error.message })
+      clearUser()
     }
-  };
+  }
 
   const getStats = async () => {
-    setIsLoading();
-    const endpoint = `jobs/stats`;
-    const method = "GET";
-    const authorization = `Bearer ${token}`;
+    setIsLoading()
+    const endpoint = 'jobs/stats'
+    const method = 'GET'
+    const authorization = `Bearer ${token}`
     // const redirect = () => navigate('/') // if token expired
 
     if (token) {
@@ -119,19 +118,19 @@ const useFetchJobsHook = () => {
         endpoint,
         method,
         authorization,
-      });
-      clearIsLoading();
+      })
+      clearIsLoading()
     } else {
       // navigate('/') // if token expired
-      throw new Error("Please authenticate and try again");
+      throw new Error('Please authenticate and try again')
     }
-  };
+  }
 
   const getAllJobs = async () => {
-    setIsLoading();
-    const endpoint = `jobs`;
-    const method = "GET";
-    const authorization = `Bearer ${token}`;
+    setIsLoading()
+    const endpoint = 'jobs'
+    const method = 'GET'
+    const authorization = `Bearer ${token}`
     // const redirect = () => navigate('/') // if token expired
 
     if (token) {
@@ -139,22 +138,23 @@ const useFetchJobsHook = () => {
         endpoint,
         method,
         authorization,
-      });
-      clearIsLoading();
+      })
+      clearIsLoading()
     } else {
       // navigate('/') // if token expired
-      throw new Error("Please authenticate and try again");
+      throw new Error('Please authenticate and try again')
     }
-  };
+  }
 
   const createJob = async (job) => {
-    setIsLoading();
-    delete job["_id"];
-    const endpoint = `jobs`;
-    const body = JSON.stringify(job);
-    const authorization = `Bearer ${token}`;
+    setIsLoading()
+    // eslint-disable-next-line no-param-reassign
+    delete job._id
+    const endpoint = 'jobs'
+    const body = JSON.stringify(job)
+    const authorization = `Bearer ${token}`
     // const redirect = () => navigate('/') // if token expired
-    const flashContent = `Job was created successfully!`;
+    const flashContent = 'Job was created successfully!'
 
     if (token) {
       await fetchData({
@@ -162,22 +162,22 @@ const useFetchJobsHook = () => {
         body,
         authorization,
         flashContent,
-      });
-      clearIsLoading();
+      })
+      clearIsLoading()
     } else {
       // navigate('/') // if token expired
-      throw new Error("Please authenticate and try again");
+      throw new Error('Please authenticate and try again')
     }
-  };
+  }
 
   const updateJob = async (job) => {
-    setIsLoading();
-    const endpoint = `jobs/${job._id}`;
-    const method = "PATCH";
-    const body = JSON.stringify(job);
-    const authorization = `Bearer ${token}`;
+    setIsLoading()
+    const endpoint = `jobs/${job._id}`
+    const method = 'PATCH'
+    const body = JSON.stringify(job)
+    const authorization = `Bearer ${token}`
     // const redirect = () => navigate('/') // if token expired
-    const flashContent = `Job updated successfully!`;
+    const flashContent = 'Job updated successfully!'
 
     if (token) {
       await fetchData({
@@ -186,21 +186,21 @@ const useFetchJobsHook = () => {
         body,
         authorization,
         flashContent,
-      });
-      clearIsLoading();
+      })
+      clearIsLoading()
     } else {
       // navigate('/') // if token expired
-      throw new Error("Please authenticate and try again");
+      throw new Error('Please authenticate and try again')
     }
-  };
+  }
 
   const deleteJob = async (jobId) => {
-    setIsLoading();
-    const endpoint = `jobs/${jobId}`;
-    const method = "DELETE";
-    const authorization = `Bearer ${token}`;
+    setIsLoading()
+    const endpoint = `jobs/${jobId}`
+    const method = 'DELETE'
+    const authorization = `Bearer ${token}`
     // const redirect = () => navigate('/') // if token expired
-    const flashContent = `Job deleted successfully!`;
+    const flashContent = 'Job deleted successfully!'
 
     if (token) {
       await fetchData({
@@ -208,13 +208,13 @@ const useFetchJobsHook = () => {
         method,
         authorization,
         flashContent,
-      });
-      clearIsLoading();
+      })
+      clearIsLoading()
     } else {
       // navigate('/') // if token expired
-      throw new Error("Please authenticate and try again");
+      throw new Error('Please authenticate and try again')
     }
-  };
+  }
 
   return {
     getStats,
@@ -222,7 +222,7 @@ const useFetchJobsHook = () => {
     createJob,
     updateJob,
     deleteJob,
-  };
-};
+  }
+}
 
-export default useFetchJobsHook;
+export default useFetchJobsHook

@@ -1,13 +1,12 @@
-import { useUserContext } from '../../contextAPI/context'
 import { Navigate } from 'react-router-dom'
+import { useUserContext } from '../../contextAPI/context'
 
 const ProtectedRoute = ({ children }) => {
-    const { token } = useUserContext()
+  const { token } = useUserContext()
 
-    if(!token) return <Navigate to='/' replace={true} />
+  if (!token) return <Navigate to="/" />
 
-    return (
-        <>{ children }</>
-    )
+  return children
 }
+
 export default ProtectedRoute

@@ -5,4 +5,3 @@ import Profile from './Profile'
 import Stats from './Stats'
 
 export { SharedLayout, AddJob, AllJobs, Profile, Stats }
-

@@ -1,10 +1,10 @@
-import { useAppContext, AppContextProvider } from "./appContext";
-import { useUserContext, UserContextProvider } from "./userContext";
+import { useAppContext, AppContextProvider } from './appContext'
+import { useUserContext, UserContextProvider } from './userContext'
 import {
   initAllJobsState,
   useJobsContext,
   JobsContextProvider,
-} from "./jobsContext";
+} from './jobsContext'
 
 export {
   useAppContext,
@@ -14,4 +14,4 @@ export {
   initAllJobsState,
   useJobsContext,
   JobsContextProvider,
-};
+}

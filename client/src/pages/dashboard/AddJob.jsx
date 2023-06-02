@@ -1,122 +1,118 @@
-import { useEffect, useState } from "react";
+/* eslint-disable no-underscore-dangle */
+import { useEffect, useState } from 'react'
 import {
   useAppContext,
   useJobsContext,
   //   useMapContext,
-} from "../../contextAPI/context";
-import { useFetchJobsHook } from "../../hooks";
-import {
-  FormRow,
-  FormRowSelect,
-  FlashMessage,
-  Loading,
-} from "../../components";
+} from '../../contextAPI/context'
+import { useFetchJobsHook } from '../../hooks'
+import FormRow from '../../components/form/FormRow'
+import FormRowSelect from '../../components/form/FormRowSelect'
+import FlashMessage from '../../components/utils/FlashMessage'
+import Loading from '../../components/utils/Loading'
 import {
   jobTypeOptions,
   jobCategoryOptions,
   statusOptions,
-} from "../../utils/jobOptions";
+} from '../../utils/jobOptions'
 
 const AddJob = () => {
-  const { createJob, updateJob } = useFetchJobsHook();
+  const { createJob, updateJob } = useFetchJobsHook()
 
   // context
   const { isLoading, flash, setIsLoading, clearIsLoading, setFlash } =
-    useAppContext();
+    useAppContext()
   const {
     jobs,
     isEditMode,
     editJobId,
     setIsEditModeInContext,
     setEditJobIdInContext,
-  } = useJobsContext();
-
-  // const {
-  //     setJobPopupInContext,
-  //     setShowPopUpInContext,
-  // } = useMapContext()
+    setPopUpJobIdInContext,
+  } = useJobsContext()
 
   const initJobState = {
-    _id: "1",
-    description: "",
-    company: "",
+    _id: '1',
+    description: '',
+    company: '',
     jobType: jobTypeOptions[0],
     jobCategory: jobCategoryOptions[0],
     status: statusOptions[0],
     location: {
-      address: "",
+      address: '',
       coordinates: [],
     },
-  };
+  }
 
   // component level state
-  const [formValues, setFormValues] = useState(initJobState);
+  const [formValues, setFormValues] = useState(initJobState)
 
   useEffect(() => {
     if (isEditMode && editJobId) {
-      const job = jobs.find((job) => job._id === editJobId);
-      if (!job) return;
-      setFormValues(job);
+      const job = jobs.find((job) => job._id === editJobId)
+      if (!job) return
+      setFormValues(job)
     }
-  }, [jobs, isEditMode, editJobId]);
+  }, [jobs, isEditMode, editJobId])
 
-  // clear form
+  // clear form & close jobPopUp
   const handleClear = () => {
-    setEditJobIdInContext(null);
-    setIsEditModeInContext(false);
-    // setShowPopUpInContext(false)
-    setFormValues(initJobState);
-  };
+    setEditJobIdInContext(null)
+    setIsEditModeInContext(false)
+    setFormValues(initJobState)
+    setPopUpJobIdInContext(null)
+  }
 
-  // handle change - submit
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    if (name === "address") {
+    const { name, value } = e.target
+    if (name === 'address') {
       setFormValues((prev) => ({
         ...prev,
         location: {
           ...prev.location,
           address: value,
         },
-      }));
+      }))
     } else {
-      setFormValues((prev) => ({ ...prev, [name]: value }));
+      setFormValues((prev) => ({ ...prev, [name]: value }))
     }
-  };
+  }
 
+  // eslint-disable-next-line consistent-return
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const { company, location } = formValues;
+    e.preventDefault()
+    const { company, location } = formValues
 
-    if (company?.trim() === "") {
+    if (company?.trim() === '') {
       return setFlash({
-        type: "danger",
-        message: "Company field can not be blank",
-      });
+        type: 'danger',
+        message: 'Company field can not be blank',
+      })
     }
 
-    if (location?.address?.trim() === "") {
+    if (location?.address?.trim() === '') {
       return setFlash({
-        type: "danger",
-        message: "Job address field can not be blank",
-      });
+        type: 'danger',
+        message: 'Job address field can not be blank',
+      })
     }
 
     try {
-      setIsLoading();
+      setIsLoading()
 
-      let updateObject = {};
+      let updateObject = {}
 
       Object.keys(formValues)
-        .filter((key) => key !== "location")
+        .filter((key) => key !== 'location')
         .forEach((key) => {
-          return (updateObject[key] = formValues[key]);
-        });
+          updateObject[key] = formValues[key]
+          return updateObject
+        })
 
       // => server-side mapBox geocoding only if address changed
       if (
         initJobState.location.address !== location.address &&
-        location.address.trim() !== ""
+        location.address.trim() !== ''
       ) {
         updateObject = {
           ...updateObject,
@@ -124,28 +120,30 @@ const AddJob = () => {
             ...formValues.location,
             address: location.address.trim(),
           },
-        };
+        }
       }
 
-      isEditMode
-        ? await updateJob(updateObject)
-        : await createJob(updateObject);
+      if (isEditMode) {
+        await updateJob(updateObject)
+      } else {
+        await createJob(updateObject)
+      }
 
-      clearIsLoading();
+      clearIsLoading()
     } catch (error) {
-      clearIsLoading();
+      clearIsLoading()
     }
-  };
+  }
 
-  const submitBtnText = isEditMode ? "Update" : "Create";
+  const submitBtnText = isEditMode ? 'Update' : 'Create'
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <Loading />
 
   return (
     <div className="dashboard-form-page">
       {flash?.showFlash && <FlashMessage />}
       <form className="form" onSubmit={handleSubmit}>
-        <h3>{isEditMode ? "Edit" : "Add"}</h3>
+        <h3>{isEditMode ? 'Edit' : 'Add'}</h3>
         <div className="form-center">
           <FormRow
             name="company"
@@ -203,6 +201,7 @@ const AddJob = () => {
         </button>
       </form>
     </div>
-  );
-};
-export default AddJob;
+  )
+}
+
+export default AddJob

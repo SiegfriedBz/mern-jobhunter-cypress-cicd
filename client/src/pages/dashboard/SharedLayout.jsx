@@ -1,39 +1,36 @@
+import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
-import {
-    Navbar,
-    BigSideBar,
-    SmallSideBar,
-    MapView
-} from '../../components'
-import { useEffect } from "react";
-import { useFetchJobsHook } from "../../hooks";
+import Navbar from '../../components/layout/Navbar'
+import BigSideBar from '../../components/layout/BigSideBar'
+import SmallSideBar from '../../components/layout/SmallSideBar'
+import MapView from '../../components/map/MapView'
+import { useFetchJobsHook } from '../../hooks'
 
 const SharedLayout = () => {
+  const { getAllJobs } = useFetchJobsHook()
 
-    const { getAllJobs } = useFetchJobsHook()
+  // get all jobs
+  useEffect(() => {
+    ;(async () => {
+      await getAllJobs()
+    })()
+  }, [])
 
-    // get all jobs
-    useEffect(() => {
-        (async() => {
-            console.log('useEffect get all jobs')
-            await getAllJobs()
-        })()
-    }, [])
-
-    return (
-        <div className='shared-layout'>
-            <main className='dashboard'>
-                <SmallSideBar />
-                <BigSideBar />
-                <div>
-                    <Navbar />
-                    <div className="dashboard-page">
-                        <Outlet />
-                        <MapView />
-                    </div>
-                </div>
-            </main>
+  return (
+    <div className="shared-layout">
+      <main className="dashboard">
+        <SmallSideBar />
+        <BigSideBar />
+        <div>
+          <Navbar />
+          <div className="dashboard-page">
+            <Outlet />
+            <MapView />
+          </div>
         </div>
-    )
+      </main>
+    </div>
+  )
 }
+
 export default SharedLayout

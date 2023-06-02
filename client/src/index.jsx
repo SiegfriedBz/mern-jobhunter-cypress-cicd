@@ -1,15 +1,14 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import "./assets/scss/index.scss";
+import ReactDOM from 'react-dom/client'
+import './assets/scss/index.scss'
 
-import App from "./App";
+import App from './App'
 import {
   AppContextProvider,
   UserContextProvider,
   JobsContextProvider,
-} from "./contextAPI/context";
+} from './contextAPI/context'
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
+const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(
   // <React.StrictMode>
   <AppContextProvider>
@@ -18,6 +17,6 @@ root.render(
         <App />
       </JobsContextProvider>
     </UserContextProvider>
-  </AppContextProvider>
+  </AppContextProvider>,
   // </React.StrictMode>
-);
+)
